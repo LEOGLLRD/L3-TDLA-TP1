@@ -112,8 +112,6 @@ public class NFA extends FSM {
 
     public boolean accept(String s){
 
-        //Déclaration de l'ensemble de tout les états résultat
-        HashSet<State> resultStates = new HashSet<State>();
 
         //On récupère les états initiaux
         HashSet<State> currentStates = new HashSet<>(this.getStarts());
@@ -123,11 +121,15 @@ public class NFA extends FSM {
 
             HashSet<State> workingStates = new HashSet<State>();
 
+
             for (State state : currentStates
                  ) {
-                //Pour chaque état on créer une transition prenant l'état et le symbole
+                //Pour chaque état, on crée une transition prenant l'état et le symbole
                 Transition<State> t = new Transition<State>(state, new Symbol("" + a));
-                workingStates.addAll(delta.get(t));
+
+                if(delta.containsKey(t)) {
+                    workingStates.addAll(delta.get(t));
+                }else continue;
             }
 
             //Après avoir récupérer tout les états résultats pour les états précédents,
@@ -137,12 +139,11 @@ public class NFA extends FSM {
 
         //Maintenant on vérifie si un ou plusieurs des états résultats sont
         //contenus dans les états finaux
-
-
-
         //Si au moins un état résultats est contenu dans les états finaux,
         //on retourne vrai, sinon faux
-        return currentStates.retainAll(getEnds());
+
+        currentStates.retainAll(getEnds());
+        return getEnds().contains(currentStates) || getEnds().equals(currentStates);
 
     }
 

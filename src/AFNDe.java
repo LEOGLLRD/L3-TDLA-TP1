@@ -26,8 +26,10 @@ public class AFNDe extends FSM {
         return starts;
     }
 
-    public AFNDe(Set<State> _states, Set<Symbol> _alphabet, Set<State> _ends) {
+    public AFNDe(Set<State> _states, Set<Symbol> _alphabet, Set<State> _ends, Set<State> _starts, Map<Transition<State>, Set<State>> _delta) {
         super(_states, _alphabet, _ends);
+        this.starts = _starts;
+        this.delta = _delta;
     }
 
     public AFNDe(String path) {
@@ -178,8 +180,10 @@ public class AFNDe extends FSM {
         currentStates.addAll(epsilonClause(currentStates));
 
 
+        //Pour chaque symbole
         for (char a : x.toCharArray()
         ) {
+
             HashSet<State> workingStates = new HashSet<State>();
             for (State state : currentStates
             ) {
@@ -430,6 +434,66 @@ public class AFNDe extends FSM {
 
 
         return new DFA(statesDFA, getAlphabet(), startDFA, endsDFA, newDelta);
+
+    }
+
+    public AFNDe transpose() {
+
+        //On inverse les starts et les ends
+        Set<State> newEnds = getStarts();
+        Set<State> newStarts = getEnds();
+
+        //Onn créer la hashmap qui va contenir la nouvelle fonction delta
+        HashMap<Transition<State>, Set<State>> newDelta = new HashMap<>();
+
+        HashSet<State> statesDone = new HashSet<>();
+
+
+        //Pour chaque clé de this.delta (une transition)
+        for (Transition<State> transition : delta.keySet()
+        ) {
+
+            //On créer un l'ensemble d'états que donne cette transition dans l'automate
+            Set<State> states = delta.get(transition);
+
+            //Pour chaque état
+            for (State s : states
+            ) {
+
+                if (newDelta.containsKey(new Transition<>(s, transition.getA()))) {
+
+
+                    HashSet<State> tampo2 = (HashSet<State>) newDelta.get(new Transition<>(s, transition.getA()));
+                    tampo2.add(transition.getP());
+                    newDelta.put(new Transition<>(s, transition.getA()), tampo2);
+
+                } else {
+
+                    //On l'ajoute dans un ensemble
+                    HashSet<State> tampo = new HashSet<>();
+                    tampo.add(transition.getP());
+
+                    //Enfin on inverse l'état source avec l'état résultat
+                    newDelta.put(new Transition<State>(s, transition.getA()), tampo);
+
+                }
+
+                statesDone.add(s);
+
+            }
+
+        }
+
+
+        return new AFNDe(this.getStates(), getAlphabet(), newEnds, newStarts, newDelta);
+
+    }
+
+
+    //Minimise un automate en utilisant l'algorithme de Brzozowski
+    public DFA minimize(){
+
+        return null;
 
     }
 

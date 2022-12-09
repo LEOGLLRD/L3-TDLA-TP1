@@ -147,6 +147,167 @@ public class NFA extends FSM {
 
     }
 
+    public Set<State> epsilonClause(Set<State> A) {
+        return A;
+
+    }
+
+    //Converti un automate AFNDe en automate DFA
+    public DFA toDFA() {
+
+        //Associe un ensemble d'états, à un nouvel état
+        HashMap<Set<State>, State> map = new HashMap<>();
+
+        //Le delta de l'automate DFA
+        HashMap<Transition<State>, State> newDelta = new HashMap<>();
+
+        //Variable tampon / tamporaire
+        HashSet<State> workingStates = new HashSet<>();
+
+        //Ensemble de sous ensemble nécessaire afin d'éviter une erreur lors d'insertion dans statesToDo
+        //(Pour éviter des erreurs du type ConcurrentModificationException dû à la tentative d'insertion dans un ensemble pendant qu'on le traverse)
+        HashSet<Set<State>> temporaryStatesToDo = new HashSet<>();
+
+        //Ensemble des états sur lesquels on travail
+        //ce sont les ensembles colonne pi
+        HashSet<Set<State>> statesToDo = new HashSet<>();
+
+        //On y ajoute les epsilon clotures des états de début
+        statesToDo.add(epsilonClause(getStarts()));
+
+        //On associe ces états à un nouvel état q1
+        map.put(epsilonClause(getStarts()), new State("q1"));
+
+
+        //Compteur
+        int i = 2;
+
+        do {
+
+            //On récupère tout les ensembles d'états qu'il nous reste à traiter
+            //Pour chaque ensemble d'états
+            statesToDo.addAll(temporaryStatesToDo);
+
+            //Iterateur de l'ensemble statesToDo
+            Iterator it = statesToDo.iterator();
+            //Temps que statesToDo à des éléments à parcourir
+            while (it.hasNext()
+            ) {
+
+                //On récupère un sous ensemble de statesToDo
+                Set<State> states = (Set<State>) it.next();
+
+                //Pour chaque Symbol
+                for (Symbol a : getAlphabet()
+                ) {
+
+                    //On créer un ensemble qui va récupérer les états
+                    workingStates = null;
+                    workingStates = new HashSet<>();
+
+                    //Pour chaque état
+                    for (State s : states
+                    ) {
+
+
+                        //On créer un nouvel ensemble d'états tamporaire
+                        HashSet<State> tampo = new HashSet<>();
+                        //On y ajoute l'état courant
+                        tampo.add(s);
+                        //On créer une Transition de l'ensemble tamporaire et du symbole courant
+                        Transition<Set<State>> t = new Transition<>(tampo, a);
+                        //Et on ajoute à workingStates l'epsilon Cloture du résultat de la transition t
+                        workingStates.addAll(epsilonClause(applyDeltaTilde(t)));
+
+
+                    }
+
+                    //Si statesToDo ne contient pas les états obtenus dans workingStates
+                    if (!statesToDo.contains(workingStates)) {
+                        //On les ajoutes à temporaryStatesToDo
+                        //On doit passer via
+                        temporaryStatesToDo.add(workingStates);
+                    }
+
+
+                    //Si workingStates est vide, cela veut dire
+                    //que null doit être associé à un état "vide"
+                    if (workingStates.isEmpty()) {
+
+
+                        map.put(workingStates, new State("empty"));
+
+                    }
+
+                    //Si map ne contient pas le sous ensemble workingStates
+                    else if (!map.containsKey(workingStates)) {
+
+                        //On l'ajoute en tant que clé de la valeur qi
+                        //Ici on associe un ensemble d'états à un nouvel état
+                        map.put(workingStates, new State("q" + i));
+                        i++;
+
+
+                    }
+
+
+                    //Enfin on créer une transition du type : (l'état associé aux états obtenus avec workingStates, le symbole courant)
+                    //Et on l'associe à l'état lié aux états obtenus avec workingStates
+                    if (map.containsKey(workingStates)) {
+                        newDelta.put(new Transition<State>(map.get(states), a), map.get(workingStates));
+                    } else if (workingStates.isEmpty()) {
+                        newDelta.put(new Transition<State>(map.get(states), a), new State("empty"));
+
+                    } else newDelta.put(new Transition<State>(map.get(states), a), new State("empty"));
+
+                }
+
+
+            }
+
+
+        } while (!statesToDo.containsAll(temporaryStatesToDo));
+        //Temps que stateToDo ne contient pas tout les sous ensembles de tamporaryStatesToDo
+
+        //Ensemble des états du DFA
+        HashSet<State> statesDFA = new HashSet<>();
+
+        //Ensemble des états finaux du DFA
+        HashSet<State> endsDFA = new HashSet<>();
+
+        //Etat d'origine du DFA
+        State startDFA = map.get(epsilonClause(getStarts()));
+
+        System.out.println("map : " + map);
+
+
+        for (Set<State> s : map.keySet()
+        ) {
+            State getS = map.get(s);
+
+            statesDFA.add(getS);
+
+            Set<State> var = s;
+            var.retainAll(getEnds());
+
+            if (getEnds().containsAll(var)) {
+                endsDFA.add(getS);
+            }
+
+        }
+
+        System.out.println(map.keySet());
+
+        System.out.println("States : " + statesDFA);
+        System.out.println("Starts : " + startDFA);
+        System.out.println("Ends : " + endsDFA);
+        System.out.println("newDelta : " + newDelta);
+
+
+        return new DFA(statesDFA, getAlphabet(), startDFA, endsDFA, newDelta);
+
+    }
+
     @Override
     public String toString() {
 

@@ -2,6 +2,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -116,6 +117,28 @@ public class DFA extends FSM {
 
     }
 
+    //Donne la transposée d'un DFA. Cela devient un NFA, car on peut avoir plusieurs état de début
+    public NFA tranpose(){
+
+        Set<State> newStarts = this.getEnds();
+        HashSet<State> newEnds = new HashSet<>();
+        newEnds.add(getStart());
+
+        HashMap<Transition<State>, Set<State>> newDelta = new HashMap<>();
+
+        for (Transition<State> t : delta.keySet()
+             ) {
+            HashSet<State> workingStates = new HashSet<>();
+            workingStates.add(t.getP());
+            newDelta.put(new Transition<>(delta.get(t), t.getA()), workingStates);
+        }
+
+
+        return new NFA(getStates(), getAlphabet(), newStarts, newEnds, newDelta);
+
+    }
+
+    //public NFA(Set<State> _states, Set<Symbol> _alphabet, Set<State> starts, Set<State> _ends, Map<Transition<State>, Set<State>> delta)
 
     @Override
     public String toString() {

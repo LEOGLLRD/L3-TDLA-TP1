@@ -493,7 +493,7 @@ public class AFNDe extends FSM {
     //Minimise un automate en utilisant l'algorithme de Brzozowski
     public DFA minimize(){
 
-        return null;
+        return this.transpose().toDFA().tranpose().toDFA();
 
     }
 

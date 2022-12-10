@@ -9,15 +9,16 @@ public class Main {
 
         AFNDe a3 = new AFNDe("NFA3e.json");
 
-//        HashSet<State> s2 = new HashSet<>();
-//        s2.add(new State("q1"));
-//        System.out.println(a3.epsilonClause(s2));
+        System.out.println("Minimize"+a3.minimize());
 
 
-        System.out.println(a3);
+       // System.out.println(a3);
+        // AFNDe transpo = a3.transpose();
+        // System.out.println(transpo.getDelta());
 
-        AFNDe transpo = a3.transpose();
-        System.out.println(transpo.getDelta());
+        DFA d3 = new DFA("DFA3.json");
+        System.out.println(d3);
+        System.out.println("\n"+d3.tranpose());
 
 
     }

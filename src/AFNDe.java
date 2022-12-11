@@ -196,10 +196,21 @@ public class AFNDe extends FSM {
     public boolean accept(String x) {
 
         //On récupère les états initiaux
-        HashSet<State> currentStates = new HashSet<>(this.getStarts());
+        HashSet<State> currentStates = new HashSet<>(getStarts());
+
+        //Si x est vide on vérifie si dans les états initiaux il y a un état final
+        if(x.length()==0){
+
+            Set<State> inter = new HashSet<>();
+            inter.addAll(getStarts());
+            inter.retainAll(getEnds());
+
+            return getEnds().containsAll(inter) || getEnds().equals(inter);
+
+        }
+
+        //Sinon
         currentStates.addAll(epsilonClause(currentStates));
-
-
         //Pour chaque symbole
         for (char a : x.toCharArray()
         ) {
@@ -223,7 +234,8 @@ public class AFNDe extends FSM {
 
             }
 
-            //Après avoir récupérer tout les états résultats pour les états précédents,
+
+            //Après avoir récupéré tous les états résultats pour les états précédents,
             //on applique à currentStates les nouveaux états et on passe au prochain symbole
             currentStates = workingStates;
         }
@@ -235,7 +247,15 @@ public class AFNDe extends FSM {
         //Si au moins un état résultat est contenu dans les états finaux,
         //on retourne vrai, sinon faux
 
-        return currentStates.retainAll(getEnds());
+
+        currentStates.retainAll(getEnds());
+
+        //Si currentStates est vide cela veut dire que l'on a obtenu aucun état
+        //avec les transitions. Donc le mot n'est pas accepté
+        if(currentStates.isEmpty()) return false;
+
+        currentStates.retainAll(getEnds());
+        return getEnds().contains(currentStates) || getEnds().equals(currentStates);
 
     }
 
@@ -453,9 +473,6 @@ public class AFNDe extends FSM {
 
     public AFNDe transpose() {
 
-        //On inverse les starts et les ends
-        Set<State> newEnds = getStarts();
-        Set<State> newStarts = getEnds();
 
         //Onn créer la hashmap qui va contenir la nouvelle fonction delta
         HashMap<Transition<State>, Set<State>> newDelta = new HashMap<>();
@@ -498,8 +515,7 @@ public class AFNDe extends FSM {
 
         }
 
-
-        return new AFNDe(this.getStates(), getAlphabet(), newEnds, newStarts, newDelta);
+        return new AFNDe(this.getStates(), getAlphabet(), getStarts(), getEnds(), newDelta);
 
     }
 

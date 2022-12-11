@@ -106,6 +106,10 @@ public class DFA extends FSM {
     // A vous de jouer !
     public boolean accept(String x) {
 
+        //Si x est vide, il suffit de voir si l'état initial est contenu
+        //dans les états finaux
+        if(x.length()==0)return getEnds().contains(getStart());
+
         //On récupère l'état initial
         State current = this.start;
 

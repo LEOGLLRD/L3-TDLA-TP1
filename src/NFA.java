@@ -119,6 +119,18 @@ public class NFA extends FSM {
     public boolean accept(String s){
 
 
+        //Si s est vide on vérifie si les epsilons clôtures de un des états initiaux sont
+        //contenus dans les états finaux
+        if(s.length()==0){
+
+            //On récupère tous états initiaux et leurs epsilon clôtures
+            Set<State> all = epsilonClause(getStarts());
+            all.retainAll(getEnds());
+
+            return getEnds().containsAll(all) || all.equals(getEnds());
+
+        }
+
         //On récupère les états initiaux
         HashSet<State> currentStates = new HashSet<>(this.getStarts());
 

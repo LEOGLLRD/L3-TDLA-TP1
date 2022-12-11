@@ -21,6 +21,7 @@ public class DFA extends FSM {
     // Unique état de départ
     private State start;
 
+    //Retourne l'état initial
     public State getStart() {
         return start;
     }
@@ -28,6 +29,7 @@ public class DFA extends FSM {
     // Fonction de Transititon
     private Map<Transition<State>, State> delta;
 
+    //Retourne la fonction de transition
     public Map<Transition<State>, State> getDelta() {
         return delta;
     }
@@ -104,15 +106,20 @@ public class DFA extends FSM {
     // A vous de jouer !
     public boolean accept(String x) {
 
+        //On récupère l'état initial
         State current = this.start;
 
+        //Pour chaque symbole
         for (char a : x.toCharArray()) {
 
+            //On créer une transition prenant l'état courant et le symbole courant
             Transition t = new Transition(current, new Symbol("" + a));
+            //Puis on met current à l'état du résultat de t via la fonction de transition
             current = delta.get(t);
 
         }
 
+        //Enfin on vérifie si l'état obtenu est contenu dans les états finaux
         return this.getEnds().contains(current);
 
     }
@@ -120,20 +127,30 @@ public class DFA extends FSM {
     //Donne la transposée d'un DFA. Cela devient un NFA, car on peut avoir plusieurs état de début
     public NFA tranpose(){
 
+        //Etats initiaux du NFA
+        //Les états finaux deviennent les états initiaux
         Set<State> newStarts = this.getEnds();
+        //Etats finaux du NFA
         HashSet<State> newEnds = new HashSet<>();
+        //Les états initiaux deviennent les états finaux
         newEnds.add(getStart());
 
+        //Fonction de transition
         HashMap<Transition<State>, Set<State>> newDelta = new HashMap<>();
 
+        //Pour chaque Transition de la fonction de transition
         for (Transition<State> t : delta.keySet()
              ) {
+            //On créer un ensemble d'états
             HashSet<State> workingStates = new HashSet<>();
+            //Auquel on ajoute l'état de la transition courante
             workingStates.add(t.getP());
+            //Puis on "inverse" les états dans la nouvelle fonction de transition
             newDelta.put(new Transition<>(delta.get(t), t.getA()), workingStates);
         }
 
 
+        //Enfin on retourne le NFA
         return new NFA(getStates(), getAlphabet(), newStarts, newEnds, newDelta);
 
     }

@@ -12,13 +12,15 @@ import java.util.stream.StreamSupport;
 
 public class AFNDe extends FSM {
 
+    //Fonction de transition
     private Map<Transition<State>, Set<State>> delta;
 
-    //Retourne les états finaux
+    //Retourne le fonction de transition
     public Map<Transition<State>, Set<State>> getDelta() {
         return delta;
     }
 
+    //Ensemble des états initiaux
     private Set<State> starts;
 
     //Retourne les états initiaux
@@ -26,12 +28,14 @@ public class AFNDe extends FSM {
         return starts;
     }
 
+    //Constructeur
     public AFNDe(Set<State> _states, Set<Symbol> _alphabet, Set<State> _ends, Set<State> _starts, Map<Transition<State>, Set<State>> _delta) {
         super(_states, _alphabet, _ends);
         this.starts = _starts;
         this.delta = _delta;
     }
 
+    //Constructeur utilisant un fichier json
     public AFNDe(String path) {
         super(path);
 
@@ -112,9 +116,12 @@ public class AFNDe extends FSM {
     public Set<State> epsilonClause(Set<State> A) {
 
 
-        if (A.isEmpty()) return new HashSet<>();
-        if (A.equals(getStates())) return getStates();
+        //Deux cas d'arrêts
 
+        //Si A est vide
+        if (A.isEmpty()) return new HashSet<>();
+        //Si A contient tous les états de l'automate
+        if (A.equals(getStates())) return getStates();
 
         HashSet<State> epsilons = new HashSet<>();
 
@@ -127,17 +134,23 @@ public class AFNDe extends FSM {
             begin = st;
 
 
+            //On créer un itérateur sur l'ensemble st
             Iterator it = st.iterator();
 
+            //Temps que l'on peut parcourir it
             while (it.hasNext()) {
 
+                //On récupère l'état courant
                 State state = (State) it.next();
 
+                //On ajoute à l'epsilon cloture l'état courant
                 epsilons.add(state);
 
+                //Si la fonction de transition contient une transition associant
+                //l'état courant à un nouvel état via le symbole e, on ajoute le nouvel état à epsilon
                 if (delta.containsKey(new Transition<>(state, new Symbol("e")))) {
 
-
+                    //Ajout ddu résultat de la transition
                     Set<State> stateGot = delta.get(new Transition<>(state, new Symbol("e")));
 
                     HashSet<State> correctedStates = new HashSet<>();
@@ -146,23 +159,30 @@ public class AFNDe extends FSM {
                     //Pour corriger cela, quand on a un état de ce type, on va le split en plusieurs états
                     for (State s : stateGot) {
 
+                        //On split le nom par les espaces, et les virgules
                         String[] strings = s.toString().split("[, ]+");
 
+                        //Si strings a une longueur de plus de 1 cela signifie qu'il y a plusieurs états,
+                        //qui ont été considérés comme un seul ( State("q2, q4") devient State("q2"), et State("q4")
                         if (strings.length <= 1) {
-
+                            //Si strings ne contient qu'un seul état
+                            //On ajoute à epsilons le nouvel état
                             epsilons.add(s);
                             continue;
                         } else {
-
+                            //Sinon pour chaque nom,
+                            //On créer un nouvel état qu'on ajoute à correctedStates
                             for (String stateName : strings
                             ) {
                                 correctedStates.add(new State(stateName));
                             }
                         }
                     }
+                    //Et enfin on ajoute correctedStates à epsilons
                     epsilons.addAll(correctedStates);
                 }
             }
+
             st = epsilons;
 
         } while (!(st.equals(getStates()) || st.isEmpty() || st.equals(begin)));
@@ -185,6 +205,7 @@ public class AFNDe extends FSM {
         ) {
 
             HashSet<State> workingStates = new HashSet<State>();
+            //Pour chaque état courant
             for (State state : currentStates
             ) {
 
@@ -211,7 +232,7 @@ public class AFNDe extends FSM {
         //contenus dans les états finaux
 
 
-        //Si au moins un état résultats est contenu dans les états finaux,
+        //Si au moins un état résultat est contenu dans les états finaux,
         //on retourne vrai, sinon faux
 
         return currentStates.retainAll(getEnds());
@@ -226,7 +247,7 @@ public class AFNDe extends FSM {
         Set<State> states = new HashSet<State>();
 
         //D'abord on vérifie si l'espilon cloture de t.getP(),
-        //nous donne de nouveaux états
+        //ne nous donne pas de nouveaux états
 
         if (t.getP().equals(epsilonClause(t.getP()))) {
             //Si oui, on applique la transition sur chaque état de base
@@ -243,13 +264,12 @@ public class AFNDe extends FSM {
 
             }
 
+            //Sinon
         } else {
-
-
             Set<State> all = t.getP();
             all.addAll(epsilonClause(t.getP()));
 
-            //Si non, on applique la transition sur chaque état de base
+            //on applique la transition sur chaque état de base
             //et les nouveaux états de l'espilon cloture
 
 
@@ -407,15 +427,17 @@ public class AFNDe extends FSM {
         //Etat d'origine du DFA
         State startDFA = map.get(epsilonClause(getStarts()));
 
-        System.out.println("map : " + map);
 
-
+        //Pour chaque ensemble d'états de map
         for (Set<State> s : map.keySet()
         ) {
+            //On récupère le nouvel état associé à chaque ensemble
             State getS = map.get(s);
 
+            //On ajoute aux états du DFA, l'état associé à l'ensemble d'états
             statesDFA.add(getS);
 
+            //Enfin on récupère l'intersection de l'ensemble d'états courant avec les états finaux
             Set<State> var = s;
             var.retainAll(getEnds());
 
@@ -424,15 +446,7 @@ public class AFNDe extends FSM {
             }
 
         }
-
-        System.out.println(map.keySet());
-
-        System.out.println("States : " + statesDFA);
-        System.out.println("Starts : " + startDFA);
-        System.out.println("Ends : " + endsDFA);
-        System.out.println("newDelta : " + newDelta);
-
-
+        //Puis on retourne le nouvel automate DFA
         return new DFA(statesDFA, getAlphabet(), startDFA, endsDFA, newDelta);
 
     }
@@ -491,7 +505,7 @@ public class AFNDe extends FSM {
 
 
     //Minimise un automate en utilisant l'algorithme de Brzozowski
-    public DFA minimize(){
+    public DFA minimize() {
 
         return this.transpose().toDFA().tranpose().toDFA();
 

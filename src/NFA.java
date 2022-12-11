@@ -10,14 +10,18 @@ import java.util.*;
 
 public class NFA extends FSM {
 
+    //Etats initiaux
     private Set<State> starts;
 
+    //Retourne les états initiaux
     public Set<State> getStarts() {
         return starts;
     }
 
+    //Fonction de transition
     private Map<Transition<State>, Set<State>> delta;
 
+    //Retourne la fonction de transition
     public Map<Transition<State>, Set<State>> getDelta() {
         return delta;
     }
@@ -280,24 +284,30 @@ public class NFA extends FSM {
         //Etat d'origine du DFA
         State startDFA = map.get(epsilonClause(getStarts()));
 
-        System.out.println("map : " + map);
-
+        //Pour chaque ensemble d'états de map
 
         for (Set<State> s : map.keySet()
         ) {
+            //On récupère l'état associé
             State getS = map.get(s);
 
+            //Et on l'ajoute à statesDFA
             statesDFA.add(getS);
 
+            //Enfin On récupère l'ensemble d'états courant
             Set<State> var = s;
+            //Puis on fait l'intersection avec les états finaux
             var.retainAll(getEnds());
 
+            //Si var est contenu dans les états finaux
             if (getEnds().containsAll(var)) {
+                //On ajoute getS aux états finaux du DFA
                 endsDFA.add(getS);
             }
 
         }
 
+        //On retourne le DFA
         return new DFA(statesDFA, getAlphabet(), startDFA, endsDFA, newDelta);
 
     }

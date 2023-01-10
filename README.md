@@ -1,6 +1,8 @@
 ## L3-TDLA-TP1
 #### Léo Gaillard/ Edouard Capdepon
 
+Projet scolaire
+
 C'est un projet visant à permettre de réaliser des automates en JAVA, et de faire différentes opérations avec.
 
 Les types supportés, sont les automates finis déterministe, les automates finis non-deterministes.
